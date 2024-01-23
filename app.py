@@ -5,6 +5,7 @@ import seaborn as sns
 from transformers import pipeline
 from PyPDF2 import PdfReader
 from textblob import TextBlob
+import io
 
 # Function to analyze sentiment
 def analyze_sentiment(text):
@@ -22,11 +23,12 @@ def text_summary(text, max_length=150):
 # Function to extract text from PDF
 def extract_text_from_pdf(uploaded_file):
     with st.spinner("Extracting text from PDF..."):
-        with open(uploaded_file.name, "rb") as f:
-            reader = PdfReader(f)
-            page = reader.pages[0]
-            text = page.extract_text()
-        return text
+        # Use BytesIO to read the contents of the uploaded file
+        pdf_bytes = io.BytesIO(uploaded_file.read())
+        reader = PdfReader(pdf_bytes)
+        page = reader.pages[0]
+        text = page.extract_text()
+    return text
 
 # Function for Text Summarization App
 def text_summarization_app():
