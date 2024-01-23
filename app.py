@@ -125,4 +125,8 @@ def main():
 
     if app_choice == "Text Summarizer":
         text_summarization_app()
-    elif app_choice == "Sentiment
+    elif app_choice == "Sentiment Analyzer":
+        sentiment_analysis_app()
+
+if __name__ == "__main__":
+    main()
