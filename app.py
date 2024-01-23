@@ -20,12 +20,13 @@ def text_summary(text, max_length=150):
     return result[0]['summary_text']
 
 # Function to extract text from PDF
-def extract_text_from_pdf(file_path):
-    with open(file_path, "rb") as f:
-        reader = PdfReader(f)
-        page = reader.pages[0]
-        text = page.extract_text()
-    return text
+def extract_text_from_pdf(uploaded_file):
+    with st.spinner("Extracting text from PDF..."):
+        with open(uploaded_file.name, "rb") as f:
+            reader = PdfReader(f)
+            page = reader.pages[0]
+            text = page.extract_text()
+        return text
 
 # Function for Text Summarization App
 def text_summarization_app():
@@ -38,19 +39,18 @@ def text_summarization_app():
         uploaded_file = st.file_uploader("Upload a PDF file", type=["pdf"])
 
         if uploaded_file is not None:
-            with st.spinner("Summarizing document..."):
-                with st.container():
-                    st.info("Document uploaded successfully")
-                    extracted_text = extract_text_from_pdf(uploaded_file.name)
-                    st.markdown("**Extracted Text is Below:**")
-                    st.info(extracted_text)
+            with st.container():
+                st.info("Document uploaded successfully")
+                extracted_text = extract_text_from_pdf(uploaded_file)
+                st.markdown("**Extracted Text is Below:**")
+                st.info(extracted_text)
 
-                if st.button("Summarize Text"):
-                    with st.spinner("Summarizing text..."):
-                        with st.container():
-                            result = text_summary(extracted_text)
-                            st.markdown("**Summary Result**")
-                            st.success(result)
+            if st.button("Summarize Text"):
+                with st.spinner("Summarizing text..."):
+                    with st.container():
+                        result = text_summary(extracted_text)
+                        st.markdown("**Summary Result**")
+                        st.success(result)
 
     elif summarization_type == "User Input Summarizer":
         input_text = st.text_area("Enter your text here")
