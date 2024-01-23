@@ -1,22 +1,31 @@
 import streamlit as st
-from transformers import pipeline
-from PyPDF2 import PdfReader
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
+from transformers import pipeline
+from PyPDF2 import PdfReader
+from textblob import TextBlob
 
-st.set_page_config(layout="wide")
+# Function to analyze sentiment
+def analyze_sentiment(text):
+    blob = TextBlob(text)
+    sentiment_score = blob.sentiment.polarity
 
-# Create a summarization pipeline using a pre-trained model
-summarizer = pipeline("summarization")
-# Load sentiment analysis model
-sentiment_analyzer = pipeline("sentiment-analysis")
+    if sentiment_score > 0:
+        return "Positive"
+    elif sentiment_score < 0:
+        return "Negative"
+    else:
+        return "Neutral"
 
-@st.cache_resource
+# Function to perform text summarization
+@st.cache(suppress_st_warning=True)
 def text_summary(text, maxlength=None):
+    summarizer = pipeline("summarization")
     result = summarizer(text, max_length=150)  # Adjust max_length as needed
     return result[0]['summary_text']
 
+# Function to extract text from PDF
 def extract_text_from_pdf(file_path):
     with open(file_path, "rb") as f:
         reader = PdfReader(f)
@@ -24,44 +33,91 @@ def extract_text_from_pdf(file_path):
         text = page.extract_text()
     return text
 
-# Streamlit app title
-st.title("Text and Sentiment Analyzer")
+# Function for Sentiment Analysis App
+def sentiment_analysis_app():
+    st.title("Sentiment Analysis App")
+    
+    # User's choice: Analyze text or CSV dataset
+    analysis_choice = st.radio("Choose analysis option:", ["Analyze Text", "Analyze Document"])
 
-# Sidebar for selecting the analysis type
-analysis_type = st.sidebar.radio("Select Analysis Type:", ["Text Summarization", "Sentiment Analysis"])
+    if analysis_choice == "Analyze Text":
+        # Text area for sentiment analysis
+        st.subheader("Enter text for sentiment analysis:")
+        user_input = st.text_area("Input text here:")
 
-if analysis_type == "Text Summarization":
-    st.subheader("Text Summarization using Hugging Face Transformers")
+        if st.button("Analyze Sentiment"):
+            if user_input:
+                sentiment_result = analyze_sentiment(user_input)
+                st.write(f"Sentiment: {sentiment_result}")
+            else:
+                st.warning("Please enter some text for analysis.")
+
+    elif analysis_choice == "Analyze Document":
+        # File uploader for Document
+        st.subheader("Upload a document (PDF) for sentiment analysis:")
+        uploaded_file = st.file_uploader("Choose a PDF file", type=["pdf"])
+
+        if uploaded_file is not None:
+            with st.spinner("Analyzing document..."):
+                with st.container():
+                    st.info("Document uploaded successfully")
+                    extracted_text = extract_text_from_pdf(uploaded_file.name)
+                    st.markdown("**Extracted Text is Below:**")
+                    st.info(extracted_text)
+
+            if st.button("Analyze Sentiment"):
+                sentiment_result = analyze_sentiment(extracted_text)
+                st.write(f"Sentiment: {sentiment_result}")
+
+# Function for Text Summarization App
+def text_summarization_app():
+    st.title("Text Summarization App")
+    
+    # Text area for text summarization
+    st.subheader("Enter text for summarization:")
     input_text = st.text_area("Enter your text here")
-    if input_text is not None and st.button("Summarize"):
-        col1, col2 = st.columns([1, 1])
-        with col1:
-            st.markdown("**Your Input Text**")
-            st.info(input_text)
-        with col2:
-            st.markdown("**Summary Result**")
-            result = text_summary(input_text)
-            st.success(result)
 
-elif analysis_type == "Sentiment Analysis":
-    st.subheader("Sentiment Analysis using Hugging Face Transformers")
-    analysis_input = st.radio("Select Analysis Input:", ["Single Text", "CSV File"])
+    if st.button("Summarize Text"):
+        if input_text:
+            with st.spinner("Summarizing text..."):
+                with st.container():
+                    st.markdown("**Your Input Text**")
+                    st.info(input_text)
+                    result = text_summary(input_text)
+                    st.markdown("**Summary Result**")
+                    st.success(result)
 
-    if analysis_input == "Single Text":
-        # Input for single text
-        single_text = st.text_area("Enter a single text for analysis:")
-        if st.button("Analyze"):
-            if single_text:
-                result = sentiment_analyzer(single_text)
-                st.write(f"Sentiment: {result[0]['label']} with confidence: {result[0]['score']:.4f}")
+# Function to perform EDA for sentiment analysis results
+def perform_eda(df):
+    st.subheader("Exploratory Data Analysis (EDA):")
+    
+    # Bar chart for sentiment distribution
+    plt.figure(figsize=(8, 6))
+    sns.countplot(x='Sentiment', data=df)
+    plt.title('Sentiment Distribution')
+    plt.xlabel('Sentiment')
+    plt.ylabel('Count')
+    st.pyplot(plt)
 
-    elif analysis_input == "CSV File":
-        # Input for CSV file
-        csv_file = st.file_uploader("Upload a CSV file for batch analysis:", type=["csv"])
+    # Display average sentiment score
+    avg_sentiment = df['Sentiment'].value_counts(normalize=True).idxmax()
+    st.write(f"Overall Sentiment: {avg_sentiment}")
 
-        if csv_file:
-            # Read CSV file into DataFrame with 'latin-1' encoding
-            try:
-                df = pd.read_csv(csv_file, encoding='utf-8')
-            except UnicodeDecodeError:
-                st.warning("Error decoding file with utf-8 encoding. Trying lati
+# Combined App
+def main():
+    st.set_page_config(layout="wide")
+
+    st.title("Combined Text and Sentiment Analysis App")
+
+    # Sidebar for navigation
+    app_choice = st.sidebar.radio("Select App", ["Text Summarization", "Sentiment Analysis"])
+
+    if app_choice == "Text Summarization":
+        text_summarization_app()
+    elif app_choice == "Sentiment Analysis":
+        sentiment_analysis_app()
+        df = pd.DataFrame()  # Placeholder for sentiment analysis results
+        perform_eda(df)
+
+if __name__ == "__main__":
+    main()
