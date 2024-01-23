@@ -31,53 +31,86 @@ def extract_text_from_pdf(file_path):
 def text_summarization_app():
     st.title("Text Summarizer")
     
-    st.subheader("Analyze Text")
-    input_text = st.text_area("Enter your text here")
+    st.subheader("Choose Summarization Type:")
+    summarization_type = st.radio("", ["Document Summarizer", "User Input Summarizer"])
 
-    if st.button("Summarize Text") and input_text:
-        with st.spinner("Summarizing text..."):
-            with st.container():
-                st.markdown("**Your Input Text**")
-                st.info(input_text)
-                result = text_summary(input_text)
-                st.markdown("**Summary Result**")
-                st.success(result)
+    if summarization_type == "Document Summarizer":
+        uploaded_file = st.file_uploader("Upload a PDF file", type=["pdf"])
+
+        if uploaded_file is not None:
+            with st.spinner("Summarizing document..."):
+                with st.container():
+                    st.info("Document uploaded successfully")
+                    extracted_text = extract_text_from_pdf(uploaded_file.name)
+                    st.markdown("**Extracted Text is Below:**")
+                    st.info(extracted_text)
+
+                if st.button("Summarize Text"):
+                    with st.spinner("Summarizing text..."):
+                        with st.container():
+                            result = text_summary(extracted_text)
+                            st.markdown("**Summary Result**")
+                            st.success(result)
+
+    elif summarization_type == "User Input Summarizer":
+        input_text = st.text_area("Enter your text here")
+
+        if st.button("Summarize Text") and input_text:
+            with st.spinner("Summarizing text..."):
+                with st.container():
+                    st.markdown("**Your Input Text**")
+                    st.info(input_text)
+                    result = text_summary(input_text)
+                    st.markdown("**Summary Result**")
+                    st.success(result)
 
 # Function for Sentiment Analysis App
 def sentiment_analysis_app():
     st.title("Sentiment Analyzer")
     
-    st.subheader("Analyze CSV Dataset")
-    uploaded_file = st.file_uploader("Choose a CSV file", type=["csv"])
+    st.subheader("Choose Analysis Type:")
+    analysis_type = st.radio("", ["User Input Sentiment Analyzer", "CSV Dataset Sentiment Analyzer"])
 
-    if uploaded_file is not None:
-        df = pd.read_csv(uploaded_file)
+    if analysis_type == "User Input Sentiment Analyzer":
+        input_text = st.text_area("Enter your text here")
 
-        # Display the uploaded data
-        st.subheader("Uploaded Data:")
-        st.write(df)
+        if st.button("Analyze Sentiment") and input_text:
+            sentiment_result = analyze_sentiment(input_text)
+            st.write(f"Sentiment: {sentiment_result}")
+        else:
+            st.warning("Please enter some text for analysis.")
 
-        # Analyze sentiment for each row in the uploaded data
-        df['Sentiment'] = df['Text'].apply(analyze_sentiment)
+    elif analysis_type == "CSV Dataset Sentiment Analyzer":
+        uploaded_file = st.file_uploader("Choose a CSV file", type=["csv"])
 
-        # Display sentiment analysis results
-        st.subheader("Sentiment Analysis Results:")
-        st.write(df[['Text', 'Sentiment']])
+        if uploaded_file is not None:
+            df = pd.read_csv(uploaded_file)
 
-        # EDA Section
-        st.subheader("Exploratory Data Analysis (EDA):")
-        
-        # Bar chart for sentiment distribution
-        plt.figure(figsize=(8, 6))
-        sns.countplot(x='Sentiment', data=df)
-        plt.title('Sentiment Distribution')
-        plt.xlabel('Sentiment')
-        plt.ylabel('Count')
-        st.pyplot(plt)
+            # Display the uploaded data
+            st.subheader("Uploaded Data:")
+            st.write(df)
 
-        # Display average sentiment score
-        avg_sentiment = df['Sentiment'].value_counts(normalize=True).idxmax()
-        st.write(f"Overall Sentiment: {avg_sentiment}")
+            # Analyze sentiment for each row in the uploaded data
+            df['Sentiment'] = df['Text'].apply(analyze_sentiment)
+
+            # Display sentiment analysis results
+            st.subheader("Sentiment Analysis Results:")
+            st.write(df[['Text', 'Sentiment']])
+
+            # EDA Section
+            st.subheader("Exploratory Data Analysis (EDA):")
+            
+            # Bar chart for sentiment distribution
+            plt.figure(figsize=(8, 6))
+            sns.countplot(x='Sentiment', data=df)
+            plt.title('Sentiment Distribution')
+            plt.xlabel('Sentiment')
+            plt.ylabel('Count')
+            st.pyplot(plt)
+
+            # Display average sentiment score
+            avg_sentiment = df['Sentiment'].value_counts(normalize=True).idxmax()
+            st.write(f"Overall Sentiment: {avg_sentiment}")
 
 # Combined App
 def main():
@@ -92,8 +125,4 @@ def main():
 
     if app_choice == "Text Summarizer":
         text_summarization_app()
-    elif app_choice == "Sentiment Analyzer":
-        sentiment_analysis_app()
-
-if __name__ == "__main__":
-    main()
+    elif app_choice == "Sentiment
