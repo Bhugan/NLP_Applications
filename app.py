@@ -117,9 +117,6 @@ def main():
     st.set_page_config(layout="wide")
     st.title("Text and Sentiment Analysis App")
 
-    if st.sidebar.button("Reset"):
-        st.caching.clear_cache()
-
     st.sidebar.header("Choose App")
     app_choice = st.sidebar.radio("", ["Text Summarizer", "Sentiment Analyzer"])
 
