@@ -39,7 +39,7 @@ def text_summarization_app():
     
     # Sidebar for navigation
     st.sidebar.header("Choose App")
-    app_choice = st.sidebar.radio("", ["Text Summarizer", "Sentiment Analyzer"])
+    app_choice = st.sidebar.radio("", ["Text Summarizer", "Sentiment Analyzer"] key = "choice_radio")
 
     if app_choice == "Text Summarizer":
         st.subheader("Analyze Text")
