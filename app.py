@@ -33,29 +33,31 @@ def extract_text_from_pdf(file_path):
         text = page.extract_text()
     return text
 
-# Function for Sentiment Analysis App
-def sentiment_analysis_app():
-    st.title("Sentiment Analysis App")
+# Function for Text Summarization App
+def text_summarization_app():
+    st.title("Text Summarizer")
     
-    # User's choice: Analyze text or CSV dataset
-    analysis_choice = st.radio("Choose analysis option:", ["Analyze Text", "Analyze Document"])
+    # Sidebar for navigation
+    st.sidebar.header("Choose App")
+    app_choice = st.sidebar.radio("", ["Text Summarizer", "Sentiment Analyzer"])
 
-    if analysis_choice == "Analyze Text":
-        # Text area for sentiment analysis
-        st.subheader("Enter text for sentiment analysis:")
-        user_input = st.text_area("Input text here:")
+    if app_choice == "Text Summarizer":
+        st.subheader("Analyze Text")
+        input_text = st.text_area("Enter your text here")
 
-        if st.button("Analyze Sentiment"):
-            if user_input:
-                sentiment_result = analyze_sentiment(user_input)
-                st.write(f"Sentiment: {sentiment_result}")
-            else:
-                st.warning("Please enter some text for analysis.")
+        if st.button("Summarize Text"):
+            if input_text:
+                with st.spinner("Summarizing text..."):
+                    with st.container():
+                        st.markdown("**Your Input Text**")
+                        st.info(input_text)
+                        result = text_summary(input_text)
+                        st.markdown("**Summary Result**")
+                        st.success(result)
 
-    elif analysis_choice == "Analyze Document":
-        # File uploader for Document
-        st.subheader("Upload a document (PDF) for sentiment analysis:")
-        uploaded_file = st.file_uploader("Choose a PDF file", type=["pdf"])
+    elif app_choice == "Sentiment Analyzer":
+        st.subheader("Analyze Document (PDF)")
+        uploaded_file = st.file_uploader("Upload a PDF file", type=["pdf"])
 
         if uploaded_file is not None:
             with st.spinner("Analyzing document..."):
@@ -65,59 +67,88 @@ def sentiment_analysis_app():
                     st.markdown("**Extracted Text is Below:**")
                     st.info(extracted_text)
 
-            if st.button("Analyze Sentiment"):
+            if st.button("Analyze Text"):
                 sentiment_result = analyze_sentiment(extracted_text)
                 st.write(f"Sentiment: {sentiment_result}")
 
-# Function for Text Summarization App
-def text_summarization_app():
-    st.title("Text Summarization App")
+# Function for Sentiment Analysis App
+def sentiment_analysis_app():
+    st.title("Sentiment Analyzer")
     
-    # Text area for text summarization
-    st.subheader("Enter text for summarization:")
-    input_text = st.text_area("Enter your text here")
+    # Sidebar for navigation
+    st.sidebar.header("Choose App")
+    app_choice = st.sidebar.radio("", ["Text Summarizer", "Sentiment Analyzer"])
 
-    if st.button("Summarize Text"):
-        if input_text:
-            with st.spinner("Summarizing text..."):
-                with st.container():
-                    st.markdown("**Your Input Text**")
-                    st.info(input_text)
-                    result = text_summary(input_text)
-                    st.markdown("**Summary Result**")
-                    st.success(result)
+    if app_choice == "Text Summarizer":
+        st.subheader("Analyze Text")
+        input_text = st.text_area("Enter your text here")
 
-# Function to perform EDA for sentiment analysis results
-def perform_eda(df):
-    st.subheader("Exploratory Data Analysis (EDA):")
-    
-    # Bar chart for sentiment distribution
-    plt.figure(figsize=(8, 6))
-    sns.countplot(x='Sentiment', data=df)
-    plt.title('Sentiment Distribution')
-    plt.xlabel('Sentiment')
-    plt.ylabel('Count')
-    st.pyplot(plt)
+        if st.button("Analyze Sentiment"):
+            if input_text:
+                sentiment_result = analyze_sentiment(input_text)
+                st.write(f"Sentiment: {sentiment_result}")
+            else:
+                st.warning("Please enter some text for analysis.")
 
-    # Display average sentiment score
-    avg_sentiment = df['Sentiment'].value_counts(normalize=True).idxmax()
-    st.write(f"Overall Sentiment: {avg_sentiment}")
+    elif app_choice == "Sentiment Analyzer":
+        st.subheader("Analyze CSV Dataset")
+        uploaded_file = st.file_uploader("Choose a CSV file", type=["csv"])
+
+        if uploaded_file is not None:
+            df = pd.read_csv(uploaded_file)
+
+            # Display the uploaded data
+            st.subheader("Uploaded Data:")
+            st.write(df)
+
+            # Analyze sentiment for each row in the uploaded data
+            df['Sentiment'] = df['Text'].apply(analyze_sentiment)
+
+            # Display sentiment analysis results
+            st.subheader("Sentiment Analysis Results:")
+            st.write(df[['Text', 'Sentiment']])
+
+            # EDA Section
+            st.subheader("Exploratory Data Analysis (EDA):")
+            
+            # Bar chart for sentiment distribution
+            plt.figure(figsize=(8, 6))
+            sns.countplot(x='Sentiment', data=df)
+            plt.title('Sentiment Distribution')
+            plt.xlabel('Sentiment')
+            plt.ylabel('Count')
+            st.pyplot(plt)
+
+            # Display average sentiment score
+            avg_sentiment = df['Sentiment'].value_counts(normalize=True).idxmax()
+            st.write(f"Overall Sentiment: {avg_sentiment}")
 
 # Combined App
 def main():
     st.set_page_config(layout="wide")
 
-    st.title("Combined Text and Sentiment Analysis App")
+    st.title("Text and Sentiment Analysis App")
 
-    # Sidebar for navigation
-    app_choice = st.sidebar.radio("Select App", ["Text Summarization", "Sentiment Analysis"])
+    if st.sidebar.button("Reset"):
+        st.caching.clear_cache()
 
-    if app_choice == "Text Summarization":
+    if st.sidebar.checkbox("Show Code", False):
+        st.sidebar.code(
+            """
+            # Your code goes here
+            """
+        )
+
+    if st.sidebar.checkbox("Hide Sidebar", False):
+        st.sidebar.button("Show Sidebar")
+
+    st.sidebar.header("Choose App")
+    app_choice = st.sidebar.radio("", ["Text Summarizer", "Sentiment Analyzer"])
+
+    if app_choice == "Text Summarizer":
         text_summarization_app()
-    elif app_choice == "Sentiment Analysis":
+    elif app_choice == "Sentiment Analyzer":
         sentiment_analysis_app()
-        df = pd.DataFrame()  # Placeholder for sentiment analysis results
-        perform_eda(df)
 
 if __name__ == "__main__":
     main()
