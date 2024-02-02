@@ -117,7 +117,7 @@ def sentiment_analysis_app():
 # Combined App
 def main():
     st.set_page_config(layout="wide")
-    st.title("Text and Sentiment Analysis App")
+    st.title("Summarize Sense Application")
 
     st.sidebar.header("Choose App")
     app_choice = st.sidebar.radio("", ["Text Summarizer", "Sentiment Analyzer"])
