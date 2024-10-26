@@ -8,3 +8,4 @@ seaborn
 matplotlib
 tensorflow
 textblob
+tf-keras
